@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聂道围棋启蒙教育反馈系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        
+        .slider {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 8px;
+            border-radius: 5px;
+            background: linear-gradient(to right, #e2e8f0 0%, #4f46e5 0%, #4f46e5 var(--value, 50%), #e2e8f0 var(--value, 50%));
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #4f46e5;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+        }
+
+        .star {
+            color: #d1d5db;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .star.active {
+            color: #fbbf24;
+            text-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+        }
+        
+        .star:hover {
+            color: #fcd34d;
+            transform: scale(1.1);
+        }
+
+        .dropdown-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .dropdown-content.open {
+            max-height: 1000px;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card-shadow {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .skill-node {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skill-node.completed {
+            color: white;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            transform: scale(1.05);
+        }
+
+        .skill-node.current {
+            color: white;
+            border-color: #fbbf24;
+            animation: pulse 2s infinite;
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6);
+        }
+
+        .skill-node.locked {
+            background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+            color: #9ca3af;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .skill-node.bright.completed {
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .skill-node.dark.completed {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+        }
+
+        .skill-node.clickable {
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+            color: #6b7280;
+            border: 2px dashed #9ca3af;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .skill-node.clickable:hover {
+            background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+            border-color: #6b7280;
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 新的技能树样式 */
+        .skill-bright {
+            color: white;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            transform: scale(1.05);
+            transition: all 0.3s ease;
+        }
+
+        .skill-bright:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .skill-unlocked {
+            color: white;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .skill-unlocked:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .skill-locked {
+            color: #9ca3af;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .skill-locked:hover {
+            transform: scale(1.05);
+            border-color: #6b7280;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .skill-name {
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 1.2;
+            display: block;
+        }
+
+        .unlock-hint {
+            font-size: 9px;
+            opacity: 0.8;
+            margin-top: 2px;
+            line-height: 1;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        .evaluation-level-option {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .evaluation-level-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .evaluation-level-option.selected {
+            border-color: #8b5cf6 !important;
+            background: linear-gradient(135deg, #ddd6fe, #c4b5fd) !important;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        .technical-option {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .technical-option:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .technical-option.selected {
+            border-color: #f97316 !important;
+            background: linear-gradient(135deg, #fed7aa, #fdba74) !important;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+        }
+            
+         #studentName {
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        #studentName:hover {
+            border-bottom-color: #e5e7eb;
+        }
+
+        #studentName:focus {
+            border-bottom-color: #8b5cf6;
+            background: linear-gradient(135deg, #f3f4f6, #ffffff);
+        }
+
+        #evaluationDate:focus {
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        #avatarInitials {
+            transition: all 0.3s ease;
+        }
+
+        #avatarInitials:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+        }
+
+        .dimension-badge {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .grade-indicator {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .grade-indicator::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .grade-indicator:hover::before {
+            left: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .skill-node {
+                width: 70px;
+                height: 70px;
+                font-size: 11px;
+            }
+            
+            .evaluation-level-option {
+                padding: 12px;
+            }
+        }
+
+                /* PDF紧凑模式专用样式 */
+        body.pdf-compact {
+            font-size: 12px !important;
+            line-height: 1.3 !important;
+        }
+        
+        body.pdf-compact nav {
+            display: none !important;
+        }
+        
+        /* PDF模式下隐藏下拉内容，只显示选择结果 */
+        body.pdf-compact .dropdown-content {
+            display: none !important;
+        }
+        
+        /* PDF模式下确保选择结果可见 */
+        body.pdf-compact .selectedEvaluation,
+        body.pdf-compact .selectedTechnical,
+        body.pdf-compact [id^="selectedEvaluation"],
+        body.pdf-compact [id^="selectedTechnical"] {
+            display: block !important;
+            margin-top: 8px !important;
+            padding: 8px 12px !important;
+            background: #f0f9ff !important;
+            border-left: 4px solid #0284c7 !important;
+            border-radius: 6px !important;
+            font-size: 11px !important;
+            color: #0c4a6e !important;
+        }
+        
+        /* PDF模式下隐藏下拉箭头 */
+        body.pdf-compact .fa-chevron-down {
+            display: none !important;
+        }
+        
+        /* PDF模式下显示当前评分和选择 */
+        body.pdf-compact [id^="currentGrade"],
+        body.pdf-compact [id^="currentScore"],
+        body.pdf-compact [id^="currentTechnical"] {
+            display: inline-block !important;
+            font-weight: bold !important;
+            color: #1e40af !important;
+            background: #dbeafe !important;
+            padding: 4px 8px !important;
+            border-radius: 4px !important;
+            margin-left: 8px !important;
+            font-size: 11px !important;
+        }
+        
+        /* PDF模式下美化按钮区域（显示选择状态） */
+        body.pdf-compact button {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            color: #64748b !important;
+            padding: 8px 16px !important;
+            border-radius: 6px !important;
+            font-size: 11px !important;
+        }
+        
+        /* PDF模式下隐藏不必要的交互元素 */
+        body.pdf-compact input[type="range"] {
+            display: none !important;
+        }
+        
+        /* PDF模式下显示雷达图分数 */
+        body.pdf-compact .space-y-3::after {
+            content: attr(data-score) "分" !important;
+            display: block !important;
+            font-weight: bold !important;
+            color: #1e40af !important;
+            background: #dbeafe !important;
+            padding: 4px 8px !important;
+            border-radius: 4px !important;
+            margin-top: 6px !important;
+            font-size: 11px !important;
+            text-align: center !important;
+        }
+        
+        /* 紧凑化容器 */
+        body.pdf-compact .container {
+            padding: 8px !important;
+            max-width: 100% !important;
+        }
+        
+        /* 紧凑化卡片 */
+        body.pdf-compact .card-shadow {
+            padding: 12px !important;
+            margin-bottom: 12px !important;
+            border-radius: 8px !important;
+        }
+        
+        /* 紧凑化学员信息 */
+        body.pdf-compact .w-20.h-20 {
+            width: 50px !important;
+            height: 50px !important;
+            font-size: 10px !important;
+        }
+        
+        /* 紧凑化网格布局 */
+        body.pdf-compact .grid {
+            gap: 12px !important;
+        }
+        
+        /* 紧凑化雷达图 */
+        body.pdf-compact #radarChart {
+            max-width: 280px !important;
+            max-height: 280px !important;
+        }
+        
+        /* 紧凑化标题 */
+        body.pdf-compact h1 { font-size: 20px !important; margin-bottom: 8px !important; }
+        body.pdf-compact h2 { font-size: 18px !important; margin-bottom: 6px !important; }
+        body.pdf-compact h3 { font-size: 16px !important; margin-bottom: 6px !important; }
+        body.pdf-compact h4 { font-size: 14px !important; margin-bottom: 4px !important; }
+        
+        /* 紧凑化文本 */
+        body.pdf-compact p, 
+        body.pdf-compact li, 
+        body.pdf-compact span,
+        body.pdf-compact div {
+            font-size: 12px !important;
+            line-height: 1.3 !important;
+        }
+        
+        /* 紧凑化评价选项 */
+        body.pdf-compact .evaluation-level-option,
+        body.pdf-compact .technical-option {
+            padding: 8px !important;
+            margin-bottom: 6px !important;
+            font-size: 11px !important;
+        }
+        
+        /* 紧凑化技能节点 */
+        body.pdf-compact .skill-node {
+            width: 55px !important;
+            height: 55px !important;
+            font-size: 10px !important;
+            margin: 4px !important;
+        }
+        
+        /* 隐藏交互元素 */
+        body.pdf-compact button,
+        body.pdf-compact input[type="range"],
+        body.pdf-compact .fa-chevron-down {
+            display: none !important;
+        }
+        
+        /* 突出显示选中项 */
+        body.pdf-compact .selected {
+            background: #ddd6fe !important;
+            border-color: #8b5cf6 !important;
+            font-weight: bold !important;
+        }
+        
+        /* 紧凑化输入框 */
+        body.pdf-compact input[type="text"],
+        body.pdf-compact input[type="date"] {
+            border: 1px solid #d1d5db !important;
+            background: white !important;
+            padding: 4px 8px !important;
+            font-size: 12px !important;
+            font-weight: bold !important;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen">
+    <nav class="gradient-bg text-white p-4 sticky top-0 z-50 shadow-lg">
+        <div class="container mx-auto flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-chess-board text-2xl"></i>
+                <h1 class="text-lg sm:text-xl font-bold">聂道围棋启蒙教育反馈系统</h1>
+            </div>
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <button id="shareLink" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg transition-colors text-sm">
+                    <i class="fas fa-share"></i> 分享
+                </button>
+
+                <button id="exportPdf" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg transition-colors text-sm">
+                    <i class="fas fa-download"></i> 导出PDF
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-4 space-y-6 max-w-7xl">
+        <div class="bg-white rounded-2xl card-shadow p-6 animate-fadeInUp">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div class="flex items-center space-x-4 mb-4 md:mb-0">
+                    <div class="w-20 h-20 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold" id="avatarInitials" style="font-size: 12px; line-height: 1.2; text-align: center; word-break: break-all; padding: 4px;">
+                        小明
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2 mb-1">
+                            <span class="text-lg font-medium text-gray-600">学员：</span>
+                            <input type="text" id="studentName" value="小明" 
+                                   class="text-2xl font-bold text-gray-800 bg-transparent border-none outline-none focus:bg-gray-50 focus:px-2 focus:py-1 focus:rounded-lg transition-all duration-200" 
+                                   placeholder="请输入学员姓名"
+                                   onchange="updateStudentName(this.value)">
+                        </div>
+                        <p class="text-gray-600">学习周期：4个月 | 启蒙阶段</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-gray-500 mb-2">评估日期</p>
+                    <input type="date" id="evaluationDate" 
+                           class="text-lg font-semibold text-gray-800 bg-transparent border border-gray-300 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200"
+                           onchange="updateEvaluationDate(this.value)">
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl card-shadow p-6">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-chart-radar text-purple-500 mr-3"></i>
+                五维能力雷达图
+            </h3>
+            
+            <div class="grid lg:grid-cols-2 gap-8">
+                <div class="flex justify-center">
+                    <div class="relative w-full max-w-md">
+                        <canvas id="radarChart" width="400" height="400"></canvas>
+                    </div>
+                </div>
+                
+                <div class="space-y-6">
+                    <div class="space-y-6" id="radarControls">
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-xl">
+                        <h4 class="font-semibold text-blue-800 mb-2">启蒙阶段参考值</h4>
+                        <div class="text-sm text-blue-600 space-y-1">
+                            <div>习惯与围棋礼仪：65分</div>
+                            <div>规则意识：60分</div>
+                            <div>情绪管理：58分</div>
+                            <div>专注力：50分</div>
+                            <div>观察与思考：55分</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl card-shadow p-6">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-list-alt text-green-500 mr-3"></i>
+                详细评价说明
+            </h3>
+            
+            <div class="space-y-4" id="evaluationSections">
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl card-shadow p-6">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-cogs text-orange-500 mr-3"></i>
+                技术项目分析
+            </h3>
+            
+            <div class="space-y-6" id="skillRatings">
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl card-shadow p-6">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-sitemap text-indigo-500 mr-3"></i>
+                技能树
+            </h3>
+            
+            <div class="bg-gradient-to-br from-purple-50 to-blue-50 p-6 rounded-xl">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4 text-center">围棋学习进度</h4>
+                <div id="skillTree" class="flex flex-wrap justify-center gap-3">
+                </div>
+                <div class="mt-4 text-center">
+                    <p class="text-sm text-gray-600">
+                        已掌握: <span id="unlockedCount" class="font-bold text-green-600">0</span>/6 个阶段
+                    </p>
+                    <p class="text-xs text-gray-500 mt-2">
+                        前三个阶段已学习完成，后三个阶段在N2解锁
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl card-shadow p-6">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-brain text-pink-500 mr-3"></i>
+                智能分析报告
+            </h3>
+            
+            <div class="bg-gradient-to-r from-pink-50 to-purple-50 p-6 rounded-xl">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-purple-800 mb-3">优势项目</h4>
+                        <ul id="strengthsList" class="space-y-2 text-sm text-purple-700">
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-purple-800 mb-3">改进建议</h4>
+                        <ul id="suggestionsList" class="space-y-2 text-sm text-purple-700">
+                        </ul>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <h4 class="font-semibold text-purple-800 mb-3">下阶段学习目标</h4>
+                    <p id="nextGoals" class="text-purple-700 leading-relaxed">
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let radarChart;
+        
+        // 更新维度数组 - 按照新的顺序和名称
+        const radarDimensions = ['习惯与围棋礼仪', '规则意识', '情绪管理', '专注力', '观察与思考'];
+        const skillNames = ['基础吃子技巧', '基础死活概念', '实战攻防'];
+        const referenceValues = [65, 60, 58, 50, 55];
+        
+        // 详细评价标准数据
+        const evaluationCriteria = {
+            '习惯与围棋礼仪': {
+                title: '习惯与围棋礼仪',
+                levels: {
+                    A: { grade: 'A、优秀', description: '始终保持良好的坐姿、执子手势及对弈习惯', color: 'green', score: 85 },
+                    B: { grade: 'B、良好', description: '大部分时间能保持良好坐姿、执子手势及对弈习惯', color: 'blue', score: 75 },
+                    C: { grade: 'C、进步中', description: '坐姿及对弈习惯、执子手势规范度正在建立中，需要持续引导和关注', color: 'yellow', score: 60 }
+                }
+            },
+            '规则意识': {
+                title: '规则意识',
+                levels: {
+                    A: { grade: 'A、优秀', description: '能够遵守围棋的规则，一人一步、轮流落子、不悔棋，且尊重对手', color: 'green', score: 85 },
+                    B: { grade: 'B、良好', description: '大部分时间能够遵守围棋的规则，偶尔会犯规（连下两步、悔棋等）', color: 'blue', score: 75 },
+                    C: { grade: 'C、进步中', description: '会因为规则与对手发生争执，规则意识需要进一步加强', color: 'yellow', score: 60 }
+                }
+            },
+            '情绪管理': {
+                title: '情绪管理',
+                levels: {
+                    A: { grade: 'A、优秀', description: '情绪平稳，胜不骄败不馁，输棋后能听取老师的建议', color: 'green', score: 85 },
+                    B: { grade: 'B、良好', description: '情绪基本平稳，输棋或遇到困难时偶尔会哭闹，需要老师安抚与引导', color: 'blue', score: 75 },
+                    C: { grade: 'C、进步中', description: '遇到输棋或困难时就会哭闹，需要重点关注与引导', color: 'yellow', score: 60 }
+                }
+            },
+            '专注力': {
+                title: '专注力',
+                levels: {
+                    A: { grade: 'A、优秀', description: '专注力良好，课堂上能跟随老师的节奏进行课堂互动', color: 'green', score: 85 },
+                    B: { grade: 'B、良好', description: '偶尔会走神，需要老师提醒，拉回注意力', color: 'blue', score: 75 },
+                    C: { grade: 'C、进步中', description: '经常被课堂以外的因素干扰，需要老师持续关注及引导', color: 'yellow', score: 60 }
+                }
+            },
+            '观察与思考': {
+                title: '观察与思考',
+                levels: {
+                    A: { grade: 'A、优秀', description: '具备敏锐的观察力，能观察到双方棋子的弱点，三思而后行，攻彼顾我', color: 'green', score: 85 },
+                    B: { grade: 'B、良好', description: '能观察到一方（自己或对方）棋子的弱点，单纯进攻或防守', color: 'blue', score: 75 },
+                    C: { grade: 'C、进步中', description: '跟着对手下棋，独立思考的意识有待于加强', color: 'yellow', score: 60 }
+                }
+            }
+        };
+
+        // 技术项目评价标准数据
+        const technicalCriteria = {
+            '基础吃子技巧': {
+                title: '基础吃子技巧',
+                options: [
+                    '对部分吃子技巧的理解尚有欠缺，可通过视频回放加深理解。',
+                    '课上理解较好，独立做题仍需更多引导和练习。',
+                    '能够独立做题，但实战运用不够灵活，需更多尝试和积累。',
+                    '理解扎实，解题熟练，能够在实战中积极观察并运用相关技巧。'
+                ]
+            },
+            '基础死活概念': {
+                title: '基础死活概念',
+                options: [
+                    '对真假眼的理解尚有欠缺，可通过视频回放加深理解。',
+                    '能够分清真假眼，但对整块棋的死活判断仍需更多引导和练习。',
+                    '能够判断整块棋的死活，但实战运用不够灵活，需更多尝试和积累。',
+                    '熟练掌握基本死活概念，能够在实战中积极观察并运用相关技巧进行做活和杀棋。'
+                ]
+            },
+            '实战攻防': {
+                title: '实战攻防',
+                options: [
+                    '对局中容易被对手主导，不能主动运用所学技巧，需加强独立决策意识。',
+                    '对局中进攻意识强烈，但容易忽略自身薄弱处的保护，需加强攻守平衡的引导。',
+                    '防守较为谨慎，但主动寻找战机反击的意识不足，需提升进攻主动性。',
+                    '开始具有"攻守兼顾"意识，但在实际执行中对时机、方法的把握仍需提升。',
+                    '实战中能够敏锐判断，攻守兼顾，且技巧运用的时机和方法恰当。'
+                ]
+            }
+        };
+      
+        const skillTreeNodes = [
+            { name: '基础吃子', type: 'always-bright', color: '#60a5fa to #3b82f6' }, // 蓝色渐变
+            { name: '基础死活概念', type: 'always-bright', color: '#10b981 to #059669' }, // 绿色渐变
+            { name: '实战攻防', type: 'always-bright', color: '#f59e0b to #d97706' }, // 橙色渐变
+            { name: '初识布局', type: 'clickable', color: '#8b5cf6 to #7c3aed' }, // 紫色渐变
+            { name: '基础围地', type: 'clickable', color: '#ec4899 to #db2777' }, // 粉色渐变
+            { name: '全盘对弈', type: 'clickable', color: '#ef4444 to #dc2626' }  // 红色渐变
+        ];
+        
+        const studentData = {
+            name: '小明',
+            date: new Date().toISOString().split('T')[0],
+            radar: [75, 68, 70, 65, 72],
+            skills: [0, 0, 0],
+            evaluations: {},
+            comments: {},
+            technicalEvaluations: {},
+            technicalComments: {},
+            clickableSkills: { 
+                '初识布局': false, 
+                '基础围地': false, 
+                '全盘对弈': false 
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            initStudentInfo();
+            initRadarChart();
+            initRadarControls();
+            initEvaluationSections();
+            initSkillRatings();
+            initSkillTree();
+            updateAnalysisReport();
+            bindEvents();
+        });
+        
+        function loadData() {
+            const saved = localStorage.getItem('goEducationData');
+            if (saved) Object.assign(studentData, JSON.parse(saved));
+        }
+        
+        function saveData() {
+            localStorage.setItem('goEducationData', JSON.stringify(studentData));
+        }
+        
+        function initStudentInfo() {
+            document.getElementById('avatarInitials').textContent = studentData.name;
+            document.getElementById('studentName').value = studentData.name;
+            document.getElementById('evaluationDate').value = studentData.date;
+        }
+        
+        function initRadarChart() {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: radarDimensions,
+                    datasets: [{
+                        label: '当前水平',
+                        data: studentData.radar,
+                        backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: 'rgba(102, 126, 234, 1)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }, {
+                        label: '参考水平',
+                        data: referenceValues,
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        borderColor: 'rgba(34, 197, 94, 0.8)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        pointBackgroundColor: 'rgba(34, 197, 94, 0.8)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 1,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        r: {
+                            angleLines: { display: true, color: 'rgba(0,0,0,0.1)' },
+                            grid: { color: 'rgba(0,0,0,0.1)' },
+                            pointLabels: { font: { size: 12, weight: 'bold' }, color: '#374151' },
+                            suggestedMin: 0,
+                            suggestedMax: 100,
+                            ticks: { stepSize: 20, font: { size: 10 }, color: '#6b7280' }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { size: 12 }, padding: 15, usePointStyle: true } },
+                        tooltip: { callbacks: { label: function(context) { return context.dataset.label + ': ' + context.parsed.r + '分'; } } }
+                    }
+                }
+            });
+        }
+        
+        function initRadarControls() {
+            const container = document.getElementById('radarControls');
+            radarDimensions.forEach((dimension, index) => {
+                const value = studentData.radar[index];
+                const div = document.createElement('div');
+                div.className = 'space-y-3';
+                div.setAttribute('data-score', value);
+                div.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <label class="font-semibold text-gray-700">${dimension}</label>
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-bold" id="radarValue${index}">${value}</span>
+                            <span class="text-xs text-gray-500">分</span>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <input type="range" min="0" max="100" value="${value}" class="slider w-full" id="radarSlider${index}" style="--value: ${value}%">
+                        <div class="flex justify-between text-xs text-gray-400 mt-1">
+                            <span>0</span>
+                            <span class="text-green-600 font-medium">参考: ${referenceValues[index]}</span>
+                            <span>100</span>
+                        </div>
+                    </div>
+                    <div class="print-score-display" style="display: none;">
+                        <strong>${dimension}: ${value}分</strong> (参考值: ${referenceValues[index]}分)
+                    </div>
+                `;
+                container.appendChild(div);
+                
+                const slider = document.getElementById(`radarSlider${index}`);
+                const valueDisplay = document.getElementById(`radarValue${index}`);
+                
+                // 初始化data-score属性
+                div.setAttribute('data-score', studentData.radar[index] || 0);
+                
+                slider.addEventListener('input', function() {
+                    const newValue = parseInt(this.value);
+                    this.style.setProperty('--value', newValue + '%');
+                    valueDisplay.textContent = newValue;
+                    div.setAttribute('data-score', newValue);
+                    studentData.radar[index] = newValue;
+                    updateRadarChart();
+                    updateAnalysisReport();
+                    saveData();
+                });
+            });
+        }
+        
+        function updateRadarChart() {
+            if (radarChart) {
+                radarChart.data.datasets[0].data = studentData.radar;
+                radarChart.update('active');
+            }
+        }
+        
+        function initEvaluationSections() {
+            const container = document.getElementById('evaluationSections');
+            container.innerHTML = '';
+            
+            radarDimensions.forEach((dimension, index) => {
+                const criteria = evaluationCriteria[dimension];
+                const div = document.createElement('div');
+                div.className = 'border border-gray-200 rounded-xl overflow-hidden mb-4 dimension-badge';
+                
+                div.innerHTML = `
+                    <button class="w-full px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 text-left flex justify-between items-center transition-all duration-300" onclick="toggleEvaluationDetail(${index})">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">${index + 1}</span>
+                            <span class="font-bold text-gray-800 text-lg">${dimension}</span>
+                            <div class="text-sm text-gray-600 mt-1" id="selectedEvaluation${index}" style="display: none;"></div>
+                        </div>
+                        <i class="fas fa-chevron-down transform transition-transform duration-300" id="evaluationDetailIcon${index}"></i>
+                    </button>
+                    
+                    <div class="dropdown-content" id="evaluationDetail${index}">
+                        <div class="p-6 bg-gradient-to-b from-white to-gray-50">
+                            <div class="space-y-4 mb-6">
+                                <h4 class="font-bold text-gray-800 text-base mb-4 border-l-4 border-blue-500 pl-3">评价标准：</h4>
+                                ${Object.entries(criteria.levels).map(([key, level]) => `
+                                    <div class="evaluation-level-option p-4 border-2 border-gray-200 rounded-lg cursor-pointer transition-all duration-300 hover:shadow-md grade-indicator" onclick="selectEvaluationGrade(${index}, '${key}', ${level.score}, event)">
+                                        <div class="flex items-start space-x-3">
+                                            <span class="w-6 h-6 rounded-full flex-shrink-0 mt-1 shadow-sm" style="background-color: ${level.color === 'green' ? '#10b981' : level.color === 'blue' ? '#3b82f6' : '#eab308'};"></span>
+                                            <div class="flex-1">
+                                                <div class="font-bold mb-2 text-base" style="color: ${level.color === 'green' ? '#047857' : level.color === 'blue' ? '#1d4ed8' : '#a16207'};">${level.grade}</div>
+                                                <p class="text-gray-600 text-sm leading-relaxed">${level.description}</p>
+                                            </div>
+                                            <div class="flex items-center space-x-2 text-xs text-gray-500">
+                                                <span>推荐分数:</span>
+                                                <span class="px-2 py-1 rounded-full font-bold" style="background-color: ${level.color === 'green' ? '#dcfce7' : level.color === 'blue' ? '#dbeafe' : '#fef3c7'}; color: ${level.color === 'green' ? '#047857' : level.color === 'blue' ? '#1d4ed8' : '#a16207'};">${level.score}分</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            
+
+                            
+                            <div class="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                                <div class="flex items-center justify-between text-sm">
+                                    <div class="flex items-center text-blue-700">
+                                        <i class="fas fa-lightbulb mr-2 text-blue-500"></i>
+                                        <span class="font-bold">当前评价：</span>
+                                        <span id="currentGrade${index}" class="ml-2 font-bold text-blue-800">未选择</span>
+                                    </div>
+                                    <div class="flex items-center text-blue-700">
+                                        <span class="font-bold">雷达图分数：</span>
+                                        <span id="currentScore${index}" class="ml-2 font-bold text-lg text-blue-800">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+        
+        function toggleEvaluationDetail(index) {
+            const content = document.getElementById(`evaluationDetail${index}`);
+            const icon = document.getElementById(`evaluationDetailIcon${index}`);
+            content.classList.toggle('open');
+            icon.classList.toggle('rotate-180');
+        }
+        
+        function selectEvaluationGrade(index, grade, score, event) {
+            const dimension = radarDimensions[index];
+            const options = document.querySelectorAll(`#evaluationDetail${index} .evaluation-level-option`);
+            
+            options.forEach(option => option.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+            
+            document.getElementById(`currentGrade${index}`).textContent = evaluationCriteria[dimension].levels[grade].grade;
+            document.getElementById(`currentScore${index}`).textContent = score + '分';
+            studentData.evaluations[dimension] = grade;
+            updateAnalysisReport();
+            saveData();
+            
+            showNotification(`已选择 ${dimension}: ${evaluationCriteria[dimension].levels[grade].grade}`, 'success');
+           
+            const selectedDiv = document.getElementById(`selectedEvaluation${index}`);
+            const selectedText = evaluationCriteria[dimension].levels[grade].description;
+            selectedDiv.textContent = selectedText;
+            selectedDiv.style.display = 'block';
+            
+            // 自动收回下拉条（极速收回）
+            setTimeout(() => {
+                const content = document.getElementById(`evaluationDetail${index}`);
+                const icon = document.getElementById(`evaluationDetailIcon${index}`);
+                if (content && content.classList.contains('open')) {
+                    content.classList.remove('open');
+                    icon.classList.remove('rotate-180');
+                }
+            }, 100);
+        }
+        
+        function updateDetailComment(index, comment) {
+            const dimension = radarDimensions[index];
+            studentData.comments[dimension] = comment;
+            saveData();
+        }
+        
+        function initSkillRatings() {
+            const container = document.getElementById('skillRatings');
+            skillNames.forEach((skill, index) => {
+                const criteria = technicalCriteria[skill];
+                const div = document.createElement('div');
+                div.className = 'border border-orange-200 rounded-xl overflow-hidden mb-4';
+        
+                div.innerHTML = `
+                    <button class="w-full px-6 py-4 bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 text-left flex justify-between items-center transition-all duration-300" onclick="toggleTechnicalDetail(${index})">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">${index + 1}</span>
+                            <span class="font-bold text-orange-800 text-lg">${skill}</span>
+                            <div class="text-sm text-orange-600 mt-1" id="selectedTechnical${index}" style="display: none;"></div>
+                        </div>
+                        <i class="fas fa-chevron-down transform transition-transform duration-300" id="technicalDetailIcon${index}"></i>
+                    </button>
+            
+                    <div class="dropdown-content" id="technicalDetail${index}">
+                        <div class="p-6 bg-gradient-to-b from-white to-orange-50">
+                            <div class="space-y-3 mb-6">
+                                <h4 class="font-bold text-orange-800 text-base mb-4 border-l-4 border-orange-500 pl-3">评价选项：</h4>
+                                ${criteria.options.map((option, optionIndex) => `
+                                    <div class="technical-option p-3 border-2 border-orange-200 rounded-lg cursor-pointer transition-all duration-300 hover:shadow-md hover:border-orange-300" onclick="selectTechnicalOption(${index}, ${optionIndex}, '${option.replace(/'/g, '&apos;').replace(/"/g, '&quot;').replace(/\\/g, '\\\\').replace(/\r?\n/g, ' ').trim()}', event)">
+                                        <div class="flex items-start space-x-3">
+                                            <span class="w-5 h-5 rounded-full bg-orange-500 flex-shrink-0 mt-1 shadow-sm"></span>
+                                            <p class="text-gray-700 text-sm leading-relaxed flex-1">${option}</p>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+            
+
+                    
+                            <div class="mt-6 p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border border-orange-200">
+                                <div class="flex items-center text-sm text-orange-700">
+                                    <i class="fas fa-lightbulb mr-2 text-orange-500"></i>
+                                    <span class="font-bold">当前选择：</span>
+                                    <span id="currentTechnical${index}" class="ml-2 font-bold text-orange-800">未选择</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function toggleTechnicalDetail(index) {
+            const content = document.getElementById(`technicalDetail${index}`);
+            const icon = document.getElementById(`technicalDetailIcon${index}`);
+            content.classList.toggle('open');
+            icon.classList.toggle('rotate-180');
+        }
+
+        function selectTechnicalOption(index, optionIndex, optionText, event) {
+            const skill = skillNames[index];
+            const options = document.querySelectorAll(`#technicalDetail${index} .technical-option`);
+    
+            options.forEach(option => option.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+    
+            document.getElementById(`currentTechnical${index}`).textContent = optionText;
+    
+            const selectedDiv = document.getElementById(`selectedTechnical${index}`);
+            selectedDiv.textContent = optionText;
+            selectedDiv.style.display = 'block';
+    
+            studentData.technicalEvaluations[skill] = optionText;
+            updateAnalysisReport();
+            saveData();
+    
+            showNotification(`已选择 ${skill}: ${optionText}`, 'success');
+            
+            // 自动收回下拉条（极速收回）
+            setTimeout(() => {
+                const content = document.getElementById(`technicalDetail${index}`);
+                const icon = document.getElementById(`technicalDetailIcon${index}`);
+                if (content && content.classList.contains('open')) {
+                    content.classList.remove('open');
+                    icon.classList.remove('rotate-180');
+                }
+            }, 100);
+        }
+
+        function updateTechnicalComment(index, comment) {
+            const skill = skillNames[index];
+            studentData.technicalComments[skill] = comment;
+            saveData();
+        }
+        
+        function initSkillTree() { updateSkillTree(); }
+        
+        function updateSkillTree() {
+            const container = document.getElementById('skillTree');
+            let unlockedCount = 0;
+            
+            container.innerHTML = skillTreeNodes.map((node, index) => {
+                let isUnlocked = false;
+                let backgroundStyle = '';
+                let nodeClass = '';
+                let clickHandler = '';
+                let title = '';
+                
+                if (node.type === 'always-bright') {
+                    // 前三个技能始终亮起
+                    isUnlocked = true;
+                    unlockedCount++;
+                    backgroundStyle = `background: linear-gradient(135deg, ${node.color.replace(' to ', ', ')});`;
+                    nodeClass = 'skill-bright';
+                    title = `${node.name} - 已掌握`;
+                } else if (node.type === 'clickable') {
+                    // 后三个技能可点击切换
+                    isUnlocked = studentData.clickableSkills[node.name] || false;
+                    if (isUnlocked) {
+                        unlockedCount++;
+                        backgroundStyle = `background: linear-gradient(135deg, ${node.color.replace(' to ', ', ')});`;
+                        nodeClass = 'skill-unlocked';
+                    } else {
+                        backgroundStyle = 'background: linear-gradient(135deg, #f3f4f6, #e5e7eb); border: 2px dashed #9ca3af;';
+                        nodeClass = 'skill-locked';
+                    }
+                    clickHandler = `onclick="toggleSkill('${node.name}')"`;
+                    title = `点击${isUnlocked ? '取消' : ''}解锁: ${node.name}`;
+                }
+                
+                return `
+                    <div class="skill-node ${nodeClass}" 
+                         style="${backgroundStyle}" 
+                         title="${title}" 
+                         ${clickHandler}>
+                        <span class="skill-name">${node.name}</span>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('unlockedCount').textContent = unlockedCount;
+        }
+        
+        function toggleSkill(skillName) {
+            studentData.clickableSkills[skillName] = !studentData.clickableSkills[skillName];
+            const action = studentData.clickableSkills[skillName] ? '解锁' : '取消解锁';
+            showNotification(`${action}技能: ${skillName}`, 'success');
+            updateSkillTree();
+            saveData();
+        }
+              
+        function updateStudentName(name) {
+            studentData.name = name || '学员';
+            document.getElementById('avatarInitials').textContent = studentData.name;
+            saveData();
+            showNotification('学员姓名已更新', 'success');
+        }
+        
+        function updateEvaluationDate(date) {
+            studentData.date = date;
+            saveData();
+            showNotification('评估日期已更新', 'success');
+        }
+        
+        function updateAnalysisReport() {
+            const strengths = [], suggestions = [];
+            let completedDimensions = 0; // 统计完成的维度数量
+            let excellentDimensions = 0; // 统计表现优秀的维度数量
+            
+            // 分析雷达图数据（5个素能维度）
+            studentData.radar.forEach((score, index) => {
+                const dimension = radarDimensions[index];
+                if (score > 0) { // 有评分就算完成
+                    completedDimensions++;
+                    if (score >= 80) {
+                        excellentDimensions++; // 优秀维度计数
+                        strengths.push(dimension);
+                    } else if (score < 65) {
+                        suggestions.push(`重点提升${dimension}`);
+                    }
+                }
+            });
+            
+            // 分析技术项目评价（3个技术维度）
+            Object.keys(technicalCriteria).forEach(skillName => {
+                if (studentData.technicalEvaluations[skillName]) {
+                    completedDimensions++; // 有选择就算完成
+                    const selectedOption = studentData.technicalEvaluations[skillName];
+                    const skillOptions = technicalCriteria[skillName].options;
+                    const selectedIndex = skillOptions.indexOf(selectedOption);
+                    
+                    if (selectedIndex === 0) {
+                        // 选择了第一个选项（最差的），添加到改进建议
+                        suggestions.push(`加强练习${skillName}`);
+                    } else if (selectedIndex > 0) {
+                        // 选择了其他选项（更好的），添加到优势项目
+                        excellentDimensions++; // 优秀维度计数
+                        strengths.push(skillName);
+                    }
+                }
+            });
+            
+            // 更新优势项目显示
+            document.getElementById('strengthsList').innerHTML = strengths.length ? 
+                strengths.map(s => `<li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>${s}</li>`).join('') :
+                `<li class="text-gray-500">继续努力，发现更多优势</li>`;
+                
+            // 更新改进建议显示
+            document.getElementById('suggestionsList').innerHTML = suggestions.length ?
+                suggestions.map(s => `<li class="flex items-center"><i class="fas fa-arrow-up text-blue-500 mr-2"></i>${s}</li>`).join('') :
+                `<li class="text-gray-500">各项能力发展均衡</li>`;
+            
+            // 根据优秀维度数量（8个维度中优秀5个及以上）来决定评价话术
+            let nextGoals = '';
+            if (excellentDimensions >= 5) {
+                nextGoals = '该学员表现优秀，建议进入下一阶段学习。';
+            } else {
+                nextGoals = '继续巩固基础，重点提升薄弱环节，为进入下一阶段做准备。';
+            }
+            
+            document.getElementById('nextGoals').textContent = nextGoals;
+        }
+        
+        function bindEvents() {
+            document.getElementById('exportPdf').addEventListener('click', exportToPDF);
+            document.getElementById('shareLink').addEventListener('click', shareReport);
+        }
+        
+        async function exportToPDF() {
+            try {
+                const button = document.getElementById('exportPdf');
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 生成中...';
+                button.disabled = true;
+                
+                // 应用PDF紧凑模式样式
+                document.body.classList.add('pdf-compact');
+                
+                // 等待样式应用
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                // 智能生成PDF，截图当前页面状态（不强制展开下拉）
+                await generateSmartPDF(pdf);
+                
+                pdf.save(`围棋启蒙教育反馈报告_${studentData.name}_${studentData.date}.pdf`);
+                
+                // 恢复原始状态
+                document.body.classList.remove('pdf-compact');
+                
+                button.innerHTML = '<i class="fas fa-download"></i> 导出PDF';
+                button.disabled = false;
+                showNotification('PDF导出成功! 展示最终选择状态', 'success');
+            } catch (error) {
+                console.error('PDF导出失败:', error);
+                showNotification('PDF导出失败，请稍后重试', 'error');
+                
+                // 确保在错误情况下也恢复状态
+                document.body.classList.remove('pdf-compact');
+                
+                document.getElementById('exportPdf').innerHTML = '<i class="fas fa-download"></i> 导出PDF';
+                document.getElementById('exportPdf').disabled = false;
+            }
+        }
+        
+        async function generateSmartPDF(pdf) {
+            const pdfWidth = 210;
+            const pdfHeight = 297;
+            const margin = 15;
+            const availableWidth = pdfWidth - 2 * margin;
+            const availableHeight = pdfHeight - 2 * margin;
+            let currentPage = 1;
+            let currentY = margin;
+            
+            // 创建页眉函数
+            const addHeader = async (pageNum, totalPages) => {
+                const headerDiv = document.createElement('div');
+                headerDiv.innerHTML = `
+                    <div style="text-align: center; font-size: 22px; font-weight: bold; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; margin-bottom: 15px;">
+                        围棋启蒙教育反馈报告
+                    </div>
+                `;
+                headerDiv.style.cssText = 'position: fixed; top: -1000px; left: 0; width: 800px; z-index: 10000;';
+                document.body.appendChild(headerDiv);
+                
+                const headerCanvas = await html2canvas(headerDiv, {
+                    scale: 1.5,
+                    useCORS: true,
+                    backgroundColor: '#ffffff'
+                });
+                const headerImgData = headerCanvas.toDataURL('image/png');
+                const headerHeight = (headerCanvas.height / headerCanvas.width) * availableWidth;
+                pdf.addImage(headerImgData, 'PNG', margin, currentY, availableWidth, headerHeight);
+                
+                document.body.removeChild(headerDiv);
+                return headerHeight + 10;
+            };
+            
+            // 创建页脚函数
+            const addFooter = async (pageNum, totalPages) => {
+                const footerDiv = document.createElement('div');
+                footerDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #f8fafc; border-top: 2px solid #e2e8f0; font-size: 12px; color: #64748b; border-radius: 8px;">
+                        <span><strong>学员:</strong> ${studentData.name}</span>
+                        <span><strong>第 ${pageNum} 页</strong></span>
+                        <span><strong>评估日期:</strong> ${studentData.date}</span>
+                    </div>
+                `;
+                footerDiv.style.cssText = 'position: fixed; top: -1000px; left: 0; width: 800px; z-index: 10000;';
+                document.body.appendChild(footerDiv);
+                
+                const footerCanvas = await html2canvas(footerDiv, {
+                    scale: 1.5,
+                    useCORS: true,
+                    backgroundColor: '#ffffff'
+                });
+                const footerImgData = footerCanvas.toDataURL('image/png');
+                const footerHeight = (footerCanvas.height / footerCanvas.width) * availableWidth;
+                pdf.addImage(footerImgData, 'PNG', margin, pdfHeight - margin - footerHeight, availableWidth, footerHeight);
+                
+                document.body.removeChild(footerDiv);
+                return footerHeight;
+            };
+            
+            // 检查是否需要新页面
+            const checkNewPage = async (requiredHeight) => {
+                if (currentY + requiredHeight + 30 > pdfHeight - margin) { // 为页脚留空间
+                    await addFooter(currentPage, 0); // 先添加当前页页脚
+                    pdf.addPage();
+                    currentPage++;
+                    currentY = margin;
+                    currentY += await addHeader(currentPage, 0);
+                    return true;
+                }
+                return false;
+            };
+            
+            // 添加内容到PDF的通用函数
+            const addContentToPDF = async (element, maxHeight = null) => {
+                if (!element) {
+                    console.warn('PDF生成警告: 元素不存在，跳过此内容');
+                    return 0;
+                }
+                
+                const canvas = await html2canvas(element, {
+                    scale: 1.2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    allowTaint: true
+                });
+                
+                const imgData = canvas.toDataURL('image/png');
+                let imgHeight = (canvas.height / canvas.width) * availableWidth;
+                
+                // 如果设置了最大高度限制
+                if (maxHeight && imgHeight > maxHeight) {
+                    imgHeight = maxHeight;
+                }
+                
+                // 检查是否需要新页面
+                await checkNewPage(imgHeight);
+                
+                pdf.addImage(imgData, 'PNG', margin, currentY, availableWidth, imgHeight);
+                currentY += imgHeight + 15; // 添加间距
+                
+                return imgHeight;
+            };
+            
+            // 开始生成PDF
+            currentY += await addHeader(currentPage, 0);
+            
+            // 1. 学员信息
+            const studentInfo = document.querySelector('.bg-white.rounded-2xl.card-shadow');
+            if (studentInfo) {
+                await addContentToPDF(studentInfo, 60);
+            }
+            
+            // 2. 雷达图区域
+            const radarSection = studentInfo?.nextElementSibling;
+            if (radarSection) {
+                await addContentToPDF(radarSection, 180);
+            }
+            
+            // 3. 详细评价说明
+            const evaluationSection = document.getElementById('evaluationSections')?.parentElement;
+            if (evaluationSection) {
+                await checkNewPage(100); // 确保有足够空间
+                await addContentToPDF(evaluationSection);
+            }
+            
+            // 4. 技术项目分析
+            const skillSection = document.getElementById('skillRatings')?.parentElement;
+            if (skillSection) {
+                await addContentToPDF(skillSection);
+            }
+            
+            // 5. 技能树
+            const skillTreeSection = document.getElementById('skillTree')?.parentElement?.parentElement;
+            if (skillTreeSection) {
+                await checkNewPage(120); // 为技能树预留空间
+                await addContentToPDF(skillTreeSection, 150);
+            }
+            
+            // 6. 智能分析报告
+            const analysisSection = skillTreeSection?.nextElementSibling;
+            if (analysisSection) {
+                await addContentToPDF(analysisSection);
+            }
+            
+            // 添加最后一页的页脚
+            await addFooter(currentPage, currentPage);
+        }
+        
+        function shareReport() {
+            const url = window.location.href;
+            const text = '围棋启蒙教育反馈报告 - 聂道围棋';
+            
+            if (navigator.share) {
+                navigator.share({ title: text, text: text, url: url }).catch(() => fallbackShare(url, text));
+            } else {
+                fallbackShare(url, text);
+            }
+        }
+        
+        function fallbackShare(url, text) {
+            const shareText = `${text}\n${url}`;
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(shareText).then(() => {
+                    showNotification('分享链接已复制到剪贴板', 'success');
+                });
+            } else {
+                const textarea = document.createElement('textarea');
+                textarea.value = shareText;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showNotification('分享链接已复制到剪贴板', 'success');
+            }
+        }
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white transition-all transform translate-x-full`;
+            
+            switch (type) {
+                case 'success':
+                    notification.classList.add('bg-green-500');
+                    break;
+                case 'error':
+                    notification.classList.add('bg-red-500');
+                    break;
+                default:
+                    notification.classList.add('bg-blue-500');
+            }
+            
+            notification.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation' : 'info'}-circle"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.classList.remove('translate-x-full'), 100);
+            
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    if (notification.parentNode) document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html> 
